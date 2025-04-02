@@ -25,20 +25,20 @@ public class LogData {
     /**
      * Data associated with the event
      */
-    private String eventData;
+    private String eventValue;
 
     /**
      * Constructor for LogData
      * @param timestamp The timestamp of the log entry
      * @param deviceId The ID of the device that generated the log entry
      * @param eventType The type of event
-     * @param eventData The data associated with the event
+     * @param eventValue The data associated with the event
      */
-    public LogData(LocalDateTime timestamp, String deviceId, String eventType, String eventData) {
+    public LogData(LocalDateTime timestamp, String deviceId, String eventType, String eventValue) {
         this.timestamp = timestamp;
         this.deviceId = deviceId;
         this.eventType = eventType;
-        this.eventData = eventData;
+        this.eventValue = eventValue;
     }
 
 }

@@ -38,7 +38,7 @@ public class DeviceData {
         if (logData.getEventType().equals("error")) {
             errorCount++;
         }
-        events.put(logData.getEventType(), logData.getEventData());
+        events.put(logData.getEventType(), logData.getEventValue());
     }
 
     /**

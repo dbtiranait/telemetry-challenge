@@ -4,7 +4,9 @@ import com.fasterxml.jackson.databind.JsonNode;
 
 import java.io.BufferedReader;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -23,6 +25,11 @@ public class TelemetryLogParser {
      * A map that stores device data, where the key is the device ID and the value is a DeviceData object.
      */
     private Map<String, DeviceData> deviceDataMap;
+
+    /**
+     * A map that stores anomalies detected in the telemetry data, where the key is the device ID and the value is a list of anomalies.
+     */
+    private Map<String, List<String>> deviceAnomaliesMap;
 
     /**
      * Constructor for TelemetryLogParser.
@@ -54,7 +61,19 @@ public class TelemetryLogParser {
      * @throws IOException if an error occurs while reading the log file.
      */
     public void parse() throws IOException {
+        parseWithAnomalyDetecting(List.of());
+    }
+
+    /**
+     * Parses the telemetry log file and populates the deviceDataMap with DeviceData objects.
+     * Each DeviceData object contains a list of events for a specific device.
+     * Additionally, it detects anomalies in the telemetry data using the provided anomaly detectors.
+     * @param anomalyDetectors a list of anomaly detectors to be used for detecting anomalies in the telemetry data.
+     * @throws IOException if an error occurs while reading the log file.
+     */
+    public void parseWithAnomalyDetecting(List<LogDataAnomalyDetector> anomalyDetectors) throws IOException {
         deviceDataMap = new HashMap<>();
+        deviceAnomaliesMap = new HashMap<>();
         try (BufferedReader inputStream = Utils.getBufferedReader(logFilePath)) {
             LogData logData = null;
             while ((logData = Utils.getNextLogData(inputStream)) != null) {
@@ -64,6 +83,21 @@ public class TelemetryLogParser {
                 }
                 currentDeviceData.addEvent(logData);
                 deviceDataMap.put(logData.getDeviceId(), currentDeviceData);
+                if(!anomalyDetectors.isEmpty()){
+                    List<LogDataAnomalyDetector> anomalyDetectorsOfDevice = Utils.findAnomalyDetectors(logData, anomalyDetectors, currentDeviceData);
+                    if(!anomalyDetectorsOfDevice.isEmpty()){
+                        List<String> deviceAnomalies = deviceAnomaliesMap.get(logData.getDeviceId());
+                        if (deviceAnomalies == null) {
+                            deviceAnomalies = new ArrayList<>();
+                        }
+                        for(LogDataAnomalyDetector detector : anomalyDetectorsOfDevice){
+                            if(!deviceAnomalies.contains(detector.getAnomaly())){
+                                deviceAnomalies.add(detector.getAnomaly());
+                            }
+                        }
+                        deviceAnomaliesMap.put(logData.getDeviceId(), deviceAnomalies);
+                    }
+                }
             }
         }
     }
@@ -72,9 +106,20 @@ public class TelemetryLogParser {
      * Returns the parsed results as a JsonNode.
      * @return JsonNode containing the parsed telemetry data.
      */
-    public JsonNode getResults() {
+    public JsonNode getDeviceDataResults() {
         if (deviceDataMap != null) {
-            return Utils.getJsonNode(deviceDataMap);
+            return Utils.getJsonNodeForDeviceData(deviceDataMap);
+        }
+        return null;
+    }
+
+    /**
+     * Returns the detected anomalies as a JsonNode.
+     * @return JsonNode containing the detected anomalies.
+     */
+    public JsonNode getDeviceAnomaliesResults() {
+        if (deviceAnomaliesMap != null) {
+            return Utils.getJsonNodeForAnomalies(deviceAnomaliesMap);
         }
         return null;
     }

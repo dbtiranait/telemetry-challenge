@@ -2,6 +2,7 @@ package com.denisballa.telemetrychallenge;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import java.io.BufferedReader;
@@ -10,6 +11,8 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -68,7 +71,7 @@ public class Utils {
      * @param deviceDataMap the map of device data
      * @return a JsonNode representing the device data
      */
-    public static JsonNode getJsonNode(Map<String, DeviceData> deviceDataMap) {
+    public static JsonNode getJsonNodeForDeviceData(Map<String, DeviceData> deviceDataMap) {
         ObjectMapper objectMapper = new ObjectMapper();
         ObjectNode rootNode = objectMapper.createObjectNode();
         for (Map.Entry<String, DeviceData> entry : deviceDataMap.entrySet()) {
@@ -86,6 +89,50 @@ public class Utils {
             rootNode.set(deviceId, deviceNode);
         }
         return rootNode;
+    }
+
+    /**
+     * Converts a map of device anomalies to a JSON node.
+     *
+     * @param deviceAnomaliesMap the map of device anomalies
+     * @return a JsonNode representing the device anomalies
+     */
+    public static JsonNode getJsonNodeForAnomalies(Map<String, List<String>> deviceAnomaliesMap) {
+        ObjectMapper objectMapper = new ObjectMapper();
+        ObjectNode rootNode = objectMapper.createObjectNode();
+        ObjectNode anomaliesNode = objectMapper.createObjectNode();
+
+        for (Map.Entry<String, List<String>> entry : deviceAnomaliesMap.entrySet()) {
+            String deviceId = entry.getKey();
+            List<String> anomalies = entry.getValue();
+            ArrayNode anomaliesArray = objectMapper.createArrayNode();
+            for (String anomaly : anomalies) {
+                anomaliesArray.add(anomaly);
+            }
+            anomaliesNode.set(deviceId, anomaliesArray);
+        }
+
+        rootNode.set("anomalies", anomaliesNode);
+        return rootNode;
+    }
+
+    /**
+     * Finds the anomaly detector that matches the log data and last recorded data.
+     *
+     * @param logData the log data to check
+     * @param anomalyDetectors the list of anomaly detectors
+     * @param lastRecordedData the last recorded data for the device
+     * @return a list of matching anomaly detectors
+     */
+    public static List<LogDataAnomalyDetector> findAnomalyDetectors
+            (LogData logData, List<LogDataAnomalyDetector> anomalyDetectors, DeviceData lastRecordedData) {
+        List<LogDataAnomalyDetector> anomalyDetectorsResultList = new ArrayList<>();
+        for (LogDataAnomalyDetector anomalyDetector : anomalyDetectors) {
+            if (anomalyDetector.isAnomaly(logData, lastRecordedData)) {
+                anomalyDetectorsResultList.add(anomalyDetector);
+            }
+        }
+        return anomalyDetectorsResultList;
     }
 
 }
