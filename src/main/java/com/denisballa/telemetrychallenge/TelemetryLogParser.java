@@ -4,10 +4,8 @@ import com.fasterxml.jackson.databind.JsonNode;
 
 import java.io.BufferedReader;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * TelemetryLogParser is responsible for parsing a telemetry log file and extracting device data.
@@ -122,6 +120,19 @@ public class TelemetryLogParser {
             return Utils.getJsonNodeForAnomalies(deviceAnomaliesMap);
         }
         return null;
+    }
+
+    /**
+     * Returns a list of DeviceData objects ordered by the number of errors.
+     * @return a list of DeviceData objects ordered by error count.
+     */
+    public List<DeviceData> getDevicesOrderedByErrors() {
+        if (deviceDataMap == null) {
+            return new ArrayList<>();
+        }
+        return deviceDataMap.values().stream()
+                .sorted(Comparator.comparingInt(DeviceData::getErrorCount))
+                .collect(Collectors.toList());
     }
 
 }

@@ -135,4 +135,11 @@ public class Utils {
         return anomalyDetectorsResultList;
     }
 
+    public static void printDeviceDataErrorsCount(List<DeviceData> devicesOrderedByErrors) {
+        System.out.println("Devices ordered by error count:");
+        for (DeviceData deviceData : devicesOrderedByErrors) {
+            System.out.println(deviceData.getDeviceId() + " - " + deviceData.getErrorCount() + " errors");
+        }
+    }
+
 }

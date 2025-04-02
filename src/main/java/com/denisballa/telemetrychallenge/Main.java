@@ -84,6 +84,9 @@ public class Main {
         JsonNode anomaliesResults = telemetryLogParser.getDeviceAnomaliesResults();
         Utils.printJsonObject(anomaliesResults);
 
+        // Print the devices ordered by errors
+        Utils.printDeviceDataErrorsCount(telemetryLogParser.getDevicesOrderedByErrors());
+
     }
 
 }
